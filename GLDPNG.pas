@@ -2,8 +2,8 @@ unit GLDPNG;
 
 // ******************************************************
 // *                                                    *
-// *  GLDPNG ver 3.4                                    *
-// *                                   2001.07.03 改変  *
+// *  GLDPNG ver 3.4.3                                  *
+// *                                   2002.03.17 改変  *
 // *                                                    *
 // *   1998-2001 CopyRight Tarquin All Rights Reserved. *
 // *                                                    *
@@ -489,24 +489,24 @@ begin
    // 内部アルファチャンネルをコピーする
    FABmp.Assign(TGLDPNG(source).FABmp);
    // 内部情報コピー
-   TGLDPNG(source).FImgIn         :=FImgIn;
-   TGLDPNG(source).FABmpIn        :=FABmpIn;
-   TGLDPNG(source).FCompressLevel :=FCompressLevel;
-   TGLDPNG(source).FFilterType    :=FFilterType;
-   TGLDPNG(source).FIDATSize      :=FIDATSize;
-   TGLDPNG(source).FInterlaceType :=FInterlaceType;
-   TGLDPNG(source).FGrayScale     :=FGrayScale;
-   TGLDPNG(source).FText          :=FText;
-   TGLDPNG(source).FBGColor       :=FBGColor;
-   TGLDPNG(source).FTransColor    :=FTransColor;
-   TGLDPNG(source).FGamma         :=FGamma;
-   TGLDPNG(source).FShiftRGB      :=FShiftRGB;
-   TGLDPNG(source).FUnitSpecifier :=FUnitSpecifier;
-   TGLDPNG(source).FWidthSpecific :=FWidthSpecific;
-   TGLDPNG(source).FHeightSpecific:=FHeightSpecific;
-   TGLDPNG(source).FNowTime       :=FNowTime;
-   TGLDPNG(source).FTime          :=FTime;
-   TGLDPNG(source).FChrm          :=FChrm;
+   FImgIn         :=TGLDPNG(source).FImgIn;
+   FABmpIn        :=TGLDPNG(source).FABmpIn;
+   FCompressLevel :=TGLDPNG(source).FCompressLevel;
+   FFilterType    :=TGLDPNG(source).FFilterType;
+   FIDATSize      :=TGLDPNG(source).FIDATSize;
+   FInterlaceType :=TGLDPNG(source).FInterlaceType;
+   FGrayScale     :=TGLDPNG(source).FGrayScale;
+   FText          :=TGLDPNG(source).FText;
+   FBGColor       :=TGLDPNG(source).FBGColor;
+   FTransColor    :=TGLDPNG(source).FTransColor;
+   FGamma         :=TGLDPNG(source).FGamma;
+   FShiftRGB      :=TGLDPNG(source).FShiftRGB;
+   FUnitSpecifier :=TGLDPNG(source).FUnitSpecifier;
+   FWidthSpecific :=TGLDPNG(source).FWidthSpecific;
+   FHeightSpecific:=TGLDPNG(source).FHeightSpecific;
+   FNowTime       :=TGLDPNG(source).FNowTime;
+   FTime          :=TGLDPNG(source).FTime;
+   FChrm          :=TGLDPNG(source).FChrm;
   end
  else
   if Source is TGraphic then

@@ -2,8 +2,8 @@ unit GLDPNGStream;
 
 // ******************************************************
 // *                                                    *
-// *  GLDPNGStream ver 3.4.1                            *
-// *                                   2001.07.08 改変  *
+// *  GLDPNGStream ver 3.4.3                            *
+// *                                   2002.03.17 改変  *
 // *                                                    *
 // *   1998-2001 CopyRight Tarquin All Rights Reserved. *
 // *                                                    *
@@ -1870,17 +1870,10 @@ begin
       n:=-1;
       break;
      end;
-   {$IFDEF GLD_NOREVERSE_ALPHA}
     if j=0 then begin n:=i; Inc(c0); end else Inc(c255);
-   {$ELSE}
-    if j=255 then begin n:=i; Inc(c255); end else Inc(c0);
-   {$ENDIF}
    end;
-   {$IFDEF GLD_NOREVERSE_ALPHA}
-   if (c0=1) and (c255=255) and (n<>-1) then
-   {$ELSE}
-   if (c255=1) and (c0=255) and (n<>-1) then
-   {$ENDIF}
+
+   if (c0=1) and (c255=255) then
     FTransColor:=COLORREF(n or $1000000)
    else
     begin
@@ -1930,9 +1923,9 @@ begin
        for x:=0 to w do
        begin
         if (PArrayByte(ps)^[x shr 3] and BitROr[x and 7])=0 then
-         pa^:=FTransBuf[0]
+         pa^:={$IFNDEF GLD_NOREVERSE_ALPHA}not{$ENDIF} FTransBuf[0]
         else
-         pa^:=FTransBuf[1];
+         pa^:={$IFNDEF GLD_NOREVERSE_ALPHA}not{$ENDIF} FTransBuf[1];
         Inc(pa);
        end;
       end;
@@ -1940,16 +1933,16 @@ begin
        for x:=0 to w do
        begin
         if (x and 1)=0 then
-         pa^:=FTransBuf[(PArrayByte(ps)^[x shr 1] and $F0) shr 4]
+         pa^:={$IFNDEF GLD_NOREVERSE_ALPHA}not{$ENDIF} FTransBuf[(PArrayByte(ps)^[x shr 1] and $F0) shr 4]
         else
-         pa^:=FTransBuf[PArrayByte(ps)^[x shr 1] and $F];
+         pa^:={$IFNDEF GLD_NOREVERSE_ALPHA}not{$ENDIF} FTransBuf[PArrayByte(ps)^[x shr 1] and $F];
         Inc(pa);
        end;
       end;
    8: begin
        for x:=0 to w do
        begin
-        pa^:=FTransBuf[PArrayByte(ps)^[x]];
+        pa^:={$IFNDEF GLD_NOREVERSE_ALPHA}not{$ENDIF} FTransBuf[PArrayByte(ps)^[x]];
         Inc(pa);
        end;
       end;
@@ -2007,7 +2000,7 @@ begin
   // 展開
   ReadChunk;
   // 透明色設定
-  if not (EOFFlag or CancelFlag or FAlphaFlag) then
+  if (not InfoOnly) and (not (EOFFlag or CancelFlag or FAlphaFlag)) then
    begin
     if FTransColor<>GLDNONECOLOR then
      begin
@@ -2242,12 +2235,20 @@ begin
    Exit;
   end;
 
+ // イメージチェック
+ CheckImageFormat;
+
+ if InfoOnly then
+  begin
+    SkipChunk;
+    FChunkFlag:=FChunkFlag+[pcIDAT];
+    Exit;
+  end;
+
  // ZLIB展開初期化
  if ZLIBDecodeInit(@FPNGInfo.zinfo)<>0 then
   raise EGLDPNG.Create('PNG LoadStream: Error ZLIB');
 
- // イメージチェック
- CheckImageFormat;
  // ＤＩＢ確保
  CreateDIB;
  // バッファ確保
@@ -2587,14 +2588,10 @@ begin
          DoCallBack(0);
         end;
    3:  // パレット
-       if (not FAlphaFlag) and (pcPLTE in FChunkFlag) then
         begin
          i:=FChunkSize;
          if i>PaletteSize then i:=PaletteSize;
          ReadByte(@FTransBuf,i);
-         {$IFNDEF GLD_NOREVERSE_ALPHA}
-         for i:=0 to 255 do FTransBuf[i]:=not FTransBuf[i];
-         {$ENDIF}
          Dec(FChunkSize,i);
          FTransColor:=COLORREF($1FFFFFF);
          // コールバック
@@ -2682,7 +2679,6 @@ begin
  if len>0 then
   begin
    txt:=TextData;
-   if txt<>'' then txt:=txt+LFCR;
    GetMem(pp,len+4);
    FChunkSize:=0;
    ps:=pp;
@@ -2699,10 +2695,12 @@ begin
     Inc(ps);
     // 'Comment'以外ならとばし
     if key<>'Comment' then Exit;
+
     Dec(len);
     // 残りのコメント付加
     if len>0 then
      begin
+      if txt<>'' then txt:=txt+LFCR;
       while (len>0) do
       begin
        txt:=txt+ps^;

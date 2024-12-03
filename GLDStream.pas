@@ -3,7 +3,7 @@ unit GLDStream;
 // ******************************************
 // *  GLDGraphicStream                      *
 // *                                        *
-// *      2001.07.04  Copyright by Tarquin  *
+// *      2002.01.02  Copyright by Tarquin  *
 // *                                        *
 // ******************************************
 //
@@ -105,6 +105,7 @@ type
    FImage:               TGLDBmp;       // 新しく入れるイメージクラス
    FColorBufPtr:         PGLDPalRGB;    // カラーテーブル保管用バッファ
    FMes:                 string;        // 表示メッセージ
+   FInfoOnly:            boolean;       // true=情報のみ
 
    function  CreateColorBuf: PGLDPalRGB;
    procedure FreeColorBuf;
@@ -114,6 +115,7 @@ type
    function  CallBackProc(cnt: integer): boolean; override;
 
    property Image: TGLDBmp read FImage;
+   property InfoOnly: boolean read FInfoOnly;
    property ColorTBLBuf: PGLDPalRGB read CreateColorBuf;
    property Mes: string read FMes write FMes;
   public
@@ -274,15 +276,16 @@ var
  bmp: TBitmap;
 
 begin
- with FImage do
- begin
-  Assign(nil);
-  Transparent:=FALSE;
-  PixelFormat:=GLDPixelFormat(FImgBitCount);
-  Width:=FImgWidth; Height:=FImgHeight;
-  if FColorBufPtr<>nil then
-   Palette:=CreatePaletteHandle(ColorTBLBuf,FPaletteSize);
- end;
+ if (not FInfoOnly) then
+  with FImage do
+  begin
+   Assign(nil);
+   Transparent:=FALSE;
+   PixelFormat:=GLDPixelFormat(FImgBitCount);
+   Width:=FImgWidth; Height:=FImgHeight;
+   if FColorBufPtr<>nil then
+    Palette:=CreatePaletteHandle(ColorTBLBuf,FPaletteSize);
+  end;
 end;
 
 
@@ -322,8 +325,13 @@ var
 
 begin
  // 二重イベント発生を阻止するため
- ivn:=img.OnChange;
- img.OnChange:=nil;
+ FImage:=img;
+ FInfoOnly:=(img=nil);
+ if (img<>nil) then
+  begin
+   ivn:=img.OnChange;
+   img.OnChange:=nil;
+  end;
  try
   // データ初期化
   SetLoadStream(stream,size);
@@ -341,7 +349,7 @@ begin
   FlushStream;
   FreeColorBuf;
   // イベントを戻す
-  img.OnChange:=ivn;
+  if (img<>nil) then img.OnChange:=ivn;
  end;
 end;
 
@@ -357,7 +365,8 @@ var
 
 begin
  result:=FALSE;
- if Assigned(FImage.OnProgress) then
+
+ if (not FInfoOnly) and Assigned(FImage.OnProgress) then
   begin
    case cnt of
     0:     md:=psStarting;
